@@ -1,0 +1,46 @@
+---
+# Purpose: bring the instance to the desired state by running the role under test.
+# Molecule calls this playbook with `molecule converge`.
+- name: Converge
+  hosts: slm
+  gather_facts: false # Disable if your role does not rely on facts
+  become: true
+  vars:
+    resource:
+      id: b0a21dfe-b111-4d52-8b31-6d0744490e8a
+      name: "test-host"
+      address: "1.2.3.4"
+      remote_access_service:
+        id: 5d32e5e2-0b08-4a21-9af8-f502cadccedf
+        username: "username"
+        password: "password"
+  pre_tasks:
+    - name: Apply roles
+      when: item.when | default(true)
+      ansible.builtin.include_role:
+        name: "{{ item.role }}"
+        tasks_from: "{{ item.tasks_from | default('main') }}"
+      vars:
+        _consul_token: "{{ ENV.CONSUL.MASTER_TOKEN }}"
+        _store_compose_dir: "/install/deployment"
+        _vault_root_token: "{{ vault_root_token }}"
+      loop:
+        - role: eclipse.slm.env
+        - role: eclipse.slm.vault
+          tasks_from: get_root_token
+        - role: eclipse.slm.consul
+          tasks_from: get_master_token
+  tasks:
+    - name: Apply role under test
+      ansible.builtin.include_role:
+        name: ../../../slm-ansible-role-slm-client
+        tasks_from: create_resource
+      vars:
+        _vault_token: "{{ vault_root_token }}"
+        _consul_token: "{{ consul_master_token }}"
+        _resource_name: "{{ resource.name }}"
+        _resource_id: "{{ resource.id }}"
+        _resource_address: "{{ resource.address }}"
+        _resource_remote_access_service_id: "{{ resource.remote_access_service.id }}"
+        _resource_username: "{{ resource.remote_access_service.username }}"
+        _resource_password: "{{ resource.remote_access_service.password }}"
