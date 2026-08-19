@@ -7,7 +7,7 @@
       - (slm_client_service_offering_name is defined) and (slm_client_service_offering_name | length > 0)
       - (slm_client_service_offering_description is defined) and (slm_client_service_offering_description | length > 0)
       - (slm_client_service_offering_short_description is defined) and (slm_client_service_offering_short_description | length > 0)
-      - (slm_client_service_offering_category_id is defined) and (slm_client_service_offering_category_id | length > 0)
+      - (slm_client_service_offering_category_id is defined) and (slm_client_service_offering_category_id | string | length > 0)
       - (slm_client_service_offering_vendor_id is defined) and (slm_client_service_offering_vendor_id | length > 0)
 
 #### Optional Inputs:
