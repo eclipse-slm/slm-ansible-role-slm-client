@@ -35,4 +35,4 @@
 #### Outputs:
 - name: SLM_CLIENT | Set Service Offering ID after creation
   ansible.builtin.set_fact:
-    service_offering_id: "{{ slm_client_create_service_offering_response.json.serviceOfferingId }}"
+    slm_client_created_service_offering_id: "{{ slm_client_create_service_offering_response.json.serviceOfferingId }}"
