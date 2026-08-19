@@ -1,0 +1,24 @@
+---
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | get_image_as_b64_string.yml
+  ansible.builtin.assert:
+    that:
+      - (image_url is defined) and (image_url | length > 0)
+
+- name: SLM_CLIENT | Download the PNG image from GitHub
+  ansible.builtin.get_url:
+    url: "{{ image_url }}"
+    dest: "/tmp/{{ image_url | basename }}"
+    mode: '0644'
+  delegate_to: localhost
+
+### Outputs:
+- name: SLM_CLIENT | Read the downloaded file content into a Base64 string
+  ansible.builtin.set_fact:
+    slm_client_b64_encoded_image: "{{ lookup('ansible.builtin.file', '/tmp/' + (image_url | basename), rstrip=false) | b64encode }}"
+
+- name: SLM_CLIENT | Clean up the temporary file
+  ansible.builtin.file:
+    path: "/tmp/{{ image_url | basename }}"
+    state: absent
+  delegate_to: localhost

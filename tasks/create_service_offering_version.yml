@@ -1,0 +1,42 @@
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | create_service_offering_version.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_user_access_token is defined) and (slm_client_user_access_token | length > 0)
+      - (slm_client_service_offering_id is defined) and (slm_client_service_offering_id | length > 0)
+      - (slm_client_service_offering_version is defined) and (slm_client_service_offering_version | length > 0)
+      - (slm_client_service_offering_deployment_type is defined) and (slm_client_service_offering_deployment_type | length > 0)
+
+### Optional Inputs:
+# - slm_client_service_offering_option_categories (default=[]) # List of service option categories for the service offering version
+# - slm_client_service_offering_repositories (default=[]) # List of service repositories
+# - slm_client_service_offering_requirements (default=[]) # List of service requirements
+# - slm_client_service_offering_compose_file (default='')'
+
+
+
+- name: SLM_CLIENT | Create Version of Service Offering
+  ansible.builtin.uri:
+    url: "{{ slm_client_slm_base_url }}/service-management/services/offerings/{{ slm_client_service_offering_id }}/versions"
+    method: POST
+    validate_certs: false
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ slm_client_user_access_token }}"
+    body_format: json
+    body:
+      id: null
+      serviceOfferingId: "{{ slm_client_service_offering_id }}"
+      serviceOptionCategories: "{{ slm_client_service_offering_option_categories | default([]) }}"
+      serviceRepositories: "{{ slm_client_service_offering_repositories | default([]) }}"
+      serviceRequirements: "{{ slm_client_service_offering_requirements | default([]) }}"
+      version: "{{ slm_client_service_offering_version | default('1.0.0') }}"
+      deploymentDefinition:
+        deploymentType: "{{ slm_client_service_offering_deployment_type | default('DOCKER_COMPOSE') }}"
+        composeFile: "{{ slm_client_service_offering_compose_file | default(lookup('url', url, split_lines=false)) }}"
+    status_code: [200, 201]
+  register: slm_client_create_service_offering_version_response
+  failed_when:
+    - slm_client_create_service_offering_version_response.status not in [200, 201]
+    - "'has already a version' in slm_client_create_service_offering_version_response.msg"

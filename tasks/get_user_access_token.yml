@@ -1,0 +1,30 @@
+---
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | get_user_access_token.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_slm_username is defined) and (slm_client_slm_username | length > 0)
+      - (slm_client_slm_password is defined) and (slm_client_slm_password | length > 0)
+
+- name: SLM_CLIENT | Get user access token
+  ansible.builtin.uri:
+    url: "{{ slm_client_slm_base_url }}/auth/realms/fabos/protocol/openid-connect/token"
+    validate_certs: false
+    follow_redirects: all
+    method: POST
+    body:
+      grant_type: "password"
+      client_id: "ui"
+      username: "{{ slm_client_slm_username }}"
+      password: "{{ slm_client_slm_password }}"
+    body_format: form-urlencoded
+    status_code:
+      - 200
+      - 308
+  register: slm_client_user_token_response
+
+### Outputs:
+- name: SLM_CLIENT | Set user access token
+  ansible.builtin.set_fact:
+    slm_client_user_access_token: "{{ slm_client_user_token_response.json.access_token }}"

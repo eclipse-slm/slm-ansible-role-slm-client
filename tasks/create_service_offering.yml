@@ -1,0 +1,38 @@
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | create_service_offering.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_user_access_token is defined) and (slm_client_user_access_token | length > 0)
+      - (slm_client_service_offering_name is defined) and (slm_client_service_offering_name | length > 0)
+      - (slm_client_service_offering_description is defined) and (slm_client_service_offering_description | length > 0)
+      - (slm_client_service_offering_short_description is defined) and (slm_client_service_offering_short_description | length > 0)
+      - (slm_client_service_offering_category_id is defined) and (slm_client_service_offering_category_id | length > 0)
+      - (slm_client_service_offering_vendor_id is defined) and (slm_client_service_offering_vendor_id | length > 0)
+
+#### Optional Inputs:
+# - slm_client_service_offering_cover_image_b64 (default='none') # Base64 encoded string of the cover image for the service offering. If not provided, 'none' will
+
+
+- name: SLM_CLIENT | Send request to create service offering
+  ansible.builtin.uri:
+    url: "{{ slm_client_slm_base_url }}/service-management/services/offerings"
+    method: POST
+    validate_certs: false
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ slm_client_user_access_token }}"
+    body_format: json
+    body:
+      name: "{{ slm_client_service_offering_name }}"
+      description: "{{ slm_client_service_offering_description }}"
+      shortDescription: "{{ slm_client_service_offering_short_description }}"
+      serviceCategoryId: "{{ slm_client_service_offering_category_id }}"
+      serviceVendorId: "{{ slm_client_service_offering_vendor_id }}"
+      coverImage: "{{ slm_client_service_offering_cover_image_b64 | default('none') }}"
+  register: slm_client_create_service_offering_response
+
+#### Outputs:
+- name: SLM_CLIENT | Set Service Offering ID after creation
+  ansible.builtin.set_fact:
+    service_offering_id: "{{ slm_client_create_service_offering_response.json.serviceOfferingId }}"

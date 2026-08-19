@@ -1,0 +1,29 @@
+---
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | get_service_offerings.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_user_access_token is defined) and (slm_client_user_access_token | length > 0)
+
+### Optional Inputs:
+# - slm_client_get_service_offerings_vendor (default='') # uuid of service vendor
+
+- name: SLM_CLIENT | Set filter parameter for vendor
+  ansible.builtin.set_fact:
+    slm_client_vendor_filter_param: "{{ '?filterByServiceVendorId=' + slm_client_get_service_offerings_vendor | default('') }}"
+
+- name: SLM_CLIENT | Get Service Offerings
+  ansible.builtin.uri:
+    url: "{{ slm_client_slm_base_url }}/service-management/services/offerings{{ slm_client_vendor_filter_param }}"
+    method: GET
+    validate_certs: false
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ slm_client_user_access_token }}"
+  register: slm_client_get_service_offerings_response
+
+### Outputs:
+- name: SLM_CLIENT | Set service offerings
+  ansible.builtin.set_fact:
+    slm_client_service_offerings: "{{ slm_client_get_service_offerings_response.json }}"
