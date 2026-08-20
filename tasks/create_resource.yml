@@ -64,7 +64,11 @@
     - (slm_client_resource_username | default('') | length > 0)
     - (slm_client_resource_password | default('') | length > 0)
   ansible.builtin.include_tasks:
-    file: "{{ role_path }}/tasks/{{ item }}"
-  loop:
-    - create_username_password_credential.yml
-    - assign_credential_to_resource.yml
+    file: "{{ role_path }}/tasks/create_username_password_credential.yml"
+
+- name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
+  when:
+    - (slm_client_resource_username | default('') | length > 0)
+    - (slm_client_resource_password | default('') | length > 0)
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/assign_credential_to_resource.yml"
