@@ -1,0 +1,16 @@
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | get_resources.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_user_access_token is defined) and (slm_client_user_access_token | length > 0)
+      - (slm_client_resource_ip_address is defined) and (slm_client_resource_ip_address | length > 0)
+
+- name: SLM_CLIENT | Get resources from SLM API
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/get_resources.yml"
+
+### Outputs:
+- name: SLM_CLIENT | Find resource by IP address
+  ansible.builtin.set_fact:
+    slm_client_resource_by_ip: "{{ slm_client_resources | selectattr('ip', 'equalto', slm_client_resource_ip_address) | list | first }}"
