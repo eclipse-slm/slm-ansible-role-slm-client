@@ -8,6 +8,12 @@
       - (slm_client_resource_ip_address is defined) and (slm_client_resource_ip_address | length > 0)
       - (slm_client_user_id is defined) and (slm_client_user_id | length > 0)
 
+### Optional Inputs:
+# - slm_client_resource_username # otherwise no credential will be created and assigned to the resource
+# - slm_client_resource_password # otherwise no credential will be created and assigned to the resource
+# - slm_client_remote_access_service_connection_type (default='ssh') # ssh or rdp
+# - slm_client_remote_access_service_connection_port (default=22) # port number for ssh or rdp
+
 - name: SLM_CLIENT | Get resources
   ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/get_resources.yml"
@@ -30,3 +36,11 @@
   register: slm_client_add_resource_response
   vars:
     slm_resource_ips: "{{ (slm_client_resources | map(attribute='ip') | list) | default([]) }}"
+
+- name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
+  when: (slm_client_resource_username is defined) and (slm_client_resource_password is defined)
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/{{ item }}"
+  loop:
+    - create_username_password_credential.yml
+    - assign_credential_to_resource.yml
