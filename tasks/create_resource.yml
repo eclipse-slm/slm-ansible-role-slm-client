@@ -34,7 +34,7 @@
       fullPathOwnerGroupId: "/users/{{ slm_client_user_id }}"
     status_code: [200, 500]
   register: slm_client_add_resource_response
-  retries: 5
+  retries: 10
   until: slm_client_add_resource_response.status != 405 # 405 Method Not Allowed is returned when slm is starting
   vars:
     slm_resource_ips: "{{ (slm_client_resources | map(attribute='ip') | list) | default([]) }}"
