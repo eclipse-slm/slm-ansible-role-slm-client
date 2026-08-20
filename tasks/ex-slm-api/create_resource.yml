@@ -1,0 +1,12 @@
+---
+- name: Store Resource Credential in Vault
+  ansible.builtin.include_role:
+    name: "eclipse-slm.vault_client"
+    tasks_from: "slm/write_resource_credential"
+
+- name: Register Resource in Consul
+  ansible.builtin.include_role:
+    name: "eclipse-slm.consul_client"
+    tasks_from: "slm/register_resource"
+  vars:
+    _vault_credential_id: "{{ vault_kv_credential_id }}"
