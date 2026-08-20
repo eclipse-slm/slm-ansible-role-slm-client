@@ -37,19 +37,24 @@
   vars:
     slm_resource_ips: "{{ (slm_client_resources | map(attribute='ip') | list) | default([]) }}"
 
+- name: SLM_CLIENT | Get resource by IP address
+  ansible.builtin.include_tasks:
+    file: "{{ role_path }}/tasks/get_resource_by_ip.yml"
+
 - debug:
-    var: slm_client_add_resource_response
+    var: slm_client_resource_by_ip
 
 ### Outputs:
 - name: SLM_CLIENT | Set resource creation response
   ansible.builtin.set_fact:
-    slm_client_added_resource: "{{ slm_client_add_resource_response.json }}"
-    slm_client_added_resource_id: "{{ slm_client_add_resource_response.json.id }}"
+    slm_client_resource: "{{ slm_client_resource_by_ip }}"
+    slm_client_resource_id: "{{ slm_client_resource_by_ip.id }}"
 
 - name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
   when: (slm_client_resource_username is defined) and (slm_client_resource_password is defined)
   ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/{{ item }}"
+  vars:
   loop:
     - create_username_password_credential.yml
     - assign_credential_to_resource.yml
