@@ -10,7 +10,7 @@
 
 - name: SLM_CLIENT | Get resources
   ansible.builtin.include_tasks:
-    file: "{{ role_path  }}/tasks/get_resources.yml"
+    file: "{{ role_path }}/tasks/get_resources.yml"
 
 - name:  SLM_CLIENT | Add Resource via SLM API
   when: slm_client_resource_ip_address not in slm_resource_ips
