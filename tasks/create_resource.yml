@@ -50,8 +50,13 @@
     slm_client_resource: "{{ slm_client_resource_by_ip }}"
     slm_client_resource_id: "{{ slm_client_resource_by_ip.id }}"
 
+- debug:
+    msg: "Username: {{ slm_client_resource_username }}, Password: {{ slm_client_resource_password }}"
+
 - name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
-  when: (slm_client_resource_username is defined) and (slm_client_resource_password is defined)
+  when:
+    - (slm_client_resource_username | default('') | length > 0)
+    - (slm_client_resource_password | default('') | length > 0)
   ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/{{ item }}"
   vars:
