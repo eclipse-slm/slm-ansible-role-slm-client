@@ -18,4 +18,4 @@
 ### Outputs:
 - name: SLM_CLIENT | Set resources
   ansible.builtin.set_fact:
-    slm_client_resources: "{{ slm_client_get_resources_response.json }}"
+    slm_client_resources: "{{ slm_client_get_resources_response.json | default([]) }}"
