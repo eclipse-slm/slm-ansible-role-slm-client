@@ -25,7 +25,7 @@
   vars:
     slm_client_health_service_list_diff: "{{ slm_client_health_check_service_list | difference(slm_client_default_health_service_list) }}"
 
-- name: SLM_CLIENT | Assert Inputs | check_health_status.yml
+- name: SLM_CLIENT | Check health status of services
   ansible.builtin.uri:
     url: "{{ slm_client_slm_base_url }}/{{ item_service_name }}/actuator/health"
     validate_certs: false
