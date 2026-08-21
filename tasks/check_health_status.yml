@@ -1,0 +1,44 @@
+---
+### Inputs:
+- name: SLM_CLIENT | Assert Inputs | check_health_status.yml
+  ansible.builtin.assert:
+    that:
+      - (slm_client_slm_base_url is defined) and (slm_client_slm_base_url | length > 0)
+      - (slm_client_user_access_token is defined) and (slm_client_user_access_token | length > 0)
+
+### Optional Inputs:
+# - slm_client_health_check_service_list (default=slm_client_default_health_service_list) # list of service paths to check health status, 
+# - slm_client_health_check_retries (default=120) # number of retries for health check
+# - slm_client_health_check_delay (default=5) # delay in seconds between retries for health check
+
+- name: SLM_CLIENT | Assert Optional Input (slm_client_health_check_service_list) | check_health_status.yml
+  when: 
+    - slm_client_health_check_service_list is defined
+    - slm_client_health_check_service_list | default([]) | length > 0
+  ansible.builtin.assert:
+    that:
+      # Check if service list contains invalid service paths
+      - slm_client_health_service_list_diff | length == 0
+    fail_msg: >
+      The following service paths are not valid: {{ slm_client_health_service_list_diff }}.
+      Valid service paths are: {{ slm_client_default_health_service_list }}
+  vars:
+    slm_client_health_service_list_diff: "{{ slm_client_health_check_service_list | difference(slm_client_default_health_service_list) }}"
+
+- name: SLM_CLIENT | Assert Inputs | check_health_status.yml
+  ansible.builtin.uri:
+    url: "{{ slm_client_slm_base_url }}/{{ item_service_name }}/actuator/health"
+    validate_certs: false
+    method: GET
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer {{ slm_client_user_access_token }}"
+  loop: "{{ slm_client_health_check_service_list | default(slm_client_default_health_service_list) }}"
+  loop_control:
+    loop_var: item_service_name
+  register: slm_client_check_health_status_response
+  retries: "{{ slm_client_health_check_retries | default(120) }}"
+  delay: "{{ slm_client_health_check_delay | default(5) }}"
+  until:
+    - slm_client_check_health_status_response.status == 200
+    - (slm_client_check_health_status_response.json.status | default('')) == "UP"
