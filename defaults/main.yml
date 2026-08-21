@@ -1,3 +1,9 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # defaults file for slm_client
+slm_client_default_health_service_list:
+  - "resource-management"
+  - "service-management"
+  - "platform-management"
+  - "information-service"
+  - "notification-service"
