@@ -13,4 +13,4 @@
 ### Outputs:
 - name: SLM_CLIENT | Find resource by IP address
   ansible.builtin.set_fact:
-    slm_client_resource_by_ip: "{{ slm_client_resources | selectattr('ip', 'equalto', slm_client_resource_ip_address) | list | first }}"
+    slm_client_resource_by_ip: "{{ slm_client_resources | selectattr('ip', 'equalto', slm_client_resource_ip_address) | list }}"
