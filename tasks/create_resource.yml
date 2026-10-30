@@ -13,48 +13,61 @@
 # - slm_client_resource_password # otherwise no credential will be created and assigned to the resource
 # - slm_client_remote_access_service_connection_type (default='ssh') # ssh or rdp
 # - slm_client_remote_access_service_connection_port (default=22) # port number for ssh or rdp
+# - slm_client_create_resource_force (default=false) # whether to force create the resource even if it already exists
 
 - name: SLM_CLIENT | Get resources
   ansible.builtin.include_tasks:
-    file: "{{ role_path }}/tasks/get_resources.yml"
-
-- name:  SLM_CLIENT | Add Resource via SLM API
-  when: slm_client_resource_ip_address not in slm_resource_ips
-  ansible.builtin.uri:
-    url: "{{ slm_client_slm_base_url }}/resource-management/resources"
-    validate_certs: false
-    method: POST
-    headers:
-      Content-Type: "application/json"
-      Authorization: "Bearer {{ slm_client_user_access_token }}"
-    body_format: json
-    body:
-      resourceHostname: "{{ slm_client_resource_hostname }}"
-      resourceIp: "{{ slm_client_resource_ip_address }}"
-      fullPathOwnerGroupId: "/users/{{ slm_client_user_id }}"
-    status_code: [200, 500]
-  register: slm_client_add_resource_response
-  vars:
-    slm_resource_ips: "{{ (slm_client_resources | map(attribute='ip') | list) | default([]) }}"
-
-- name: SLM_CLIENT | Get resource by IP address
-  ansible.builtin.include_tasks:
     file: "{{ role_path }}/tasks/get_resource_by_ip.yml"
 
-### Outputs:
-- name: SLM_CLIENT | Set resource creation response
+- name: SLM_CLIENT | Check if resource already exists
   ansible.builtin.set_fact:
-    slm_client_resource: "{{ slm_client_resource_by_ip }}"
-    slm_client_resource_id: "{{ slm_client_resource_by_ip.id }}"
+    slm_client_resource_exists: "{{ slm_client_resource_by_ip | length > 0 }}"
 
-- name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
-  when:
-    - (slm_client_resource_username | default('') | length > 0)
-    - (slm_client_resource_password | default('') | length > 0)
-  ansible.builtin.include_tasks:
-    file: "{{ role_path }}/tasks/{{ task_file }}"
-  loop:
-    - "create_username_password_credential.yml"
-    - "assign_credential_to_resource.yml"
-  loop_control:
-    loop_var: task_file
+- name: SLM_CLIENT | Create Resource and Remote Access Credential
+  when: slm_client_create_resource_force | default(false) or not slm_client_resource_exists
+  block:
+    - name:  SLM_CLIENT | Add Resource via SLM API
+      ansible.builtin.uri:
+        url: "{{ slm_client_slm_base_url }}/resource-management/resources"
+        validate_certs: false
+        method: POST
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ slm_client_user_access_token }}"
+        body_format: json
+        body:
+          resourceHostname: "{{ slm_client_resource_hostname }}"
+          resourceIp: "{{ slm_client_resource_ip_address }}"
+          fullPathOwnerGroupId: "/users/{{ slm_client_user_id }}"
+        status_code: [200, 500]
+      register: slm_client_add_resource_response
+
+    - name: SLM_CLIENT | Get resource by IP address
+      ansible.builtin.include_tasks:
+        file: "{{ role_path }}/tasks/get_resource_by_ip.yml"
+
+    - name: SLM_CLIENT | Create Username/Password Credential and Assign to Resource
+      when:
+        - (slm_client_resource_username | default('') | length > 0)
+        - (slm_client_resource_password | default('') | length > 0)
+      ansible.builtin.include_tasks:
+        file: "{{ role_path }}/tasks/{{ task_file }}"
+      loop:
+        - "create_username_password_credential.yml"
+        - "assign_credential_to_resource.yml"
+      loop_control:
+        loop_var: task_file
+      vars:
+        slm_client_resource_id: "{{ (slm_client_resource_by_ip | first).id }}"
+
+- name: SLM_CLIENT | Set Outputs
+  block:
+    - name: SLM_CLIENT | Get resource by IP address
+      ansible.builtin.include_tasks:
+        file: "{{ role_path }}/tasks/get_resource_by_ip.yml"
+
+    ### Outputs:
+    - name: SLM_CLIENT | Set resource creation response
+      ansible.builtin.set_fact:
+        slm_client_resource: "{{ slm_client_resource_by_ip | first }}"
+        slm_client_resource_id: "{{ (slm_client_resource_by_ip | first).id }}"
